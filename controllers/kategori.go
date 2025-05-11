@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"belajar-via-dev.to/database"
-	"belajar-via-dev.to/models"
+	"github.com/Joko206/UAS_PWEB1/database"
+	"github.com/Joko206/UAS_PWEB1/models"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -122,7 +122,7 @@ func DeleteKategori(c *fiber.Ctx) error {
 		})
 	}
 
-	err = database.DeleteKateggori(id)
+	err = database.DeleteKategori(id)
 	if err != nil {
 		return c.Status(500).JSON(&fiber.Map{
 			"data":    nil,

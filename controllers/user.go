@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"belajar-via-dev.to/database"
-	"belajar-via-dev.to/models"
+	"github.com/Joko206/UAS_PWEB1/database"
+	"github.com/Joko206/UAS_PWEB1/models"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
@@ -98,6 +98,7 @@ func Login(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"message": "success",
+		"token":   token,
 	})
 }
 

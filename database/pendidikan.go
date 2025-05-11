@@ -8,29 +8,29 @@ import (
 	"gorm.io/gorm"
 )
 
-func CreateKategori(name string, description string) (models.Kategori_Soal, error) {
+func CreatePendidikan(name string, description string) (models.Pendidikan, error) {
 	// Create a new Kategori_Soal instance
-	var newKategori = models.Kategori_Soal{Name: name, Description: description}
+	var newPendidikan = models.Pendidikan{Name: name, Description: description}
 
 	// Open a database connection (or reuse the global DB connection)
 	db, err := gorm.Open(postgres.Open(Dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Error connecting to database:", err)
-		return newKategori, err
+		return newPendidikan, err
 	}
 
 	// Insert the new category into the database
-	err = db.Create(&newKategori).Error
+	err = db.Create(&newPendidikan).Error
 	if err != nil {
 		log.Fatal("Error inserting data into kategori_soal:", err)
-		return newKategori, err
+		return newPendidikan, err
 	}
 
 	// Return the newly created category
-	return newKategori, nil
+	return newPendidikan, nil
 }
-func GetallTasks() ([]models.Kategori_Soal, error) {
-	var getKategori []models.Kategori_Soal
+func GetPendidikan() ([]models.Pendidikan, error) {
+	var getKategori []models.Pendidikan
 
 	db, err := gorm.Open(postgres.Open(Dsn), &gorm.Config{})
 	if err != nil {
@@ -42,8 +42,8 @@ func GetallTasks() ([]models.Kategori_Soal, error) {
 	return getKategori, nil
 }
 
-func DeleteKategori(id string) error {
-	var deleteKategori models.Kategori_Soal
+func DeletePendidikan(id string) error {
+	var deleteKategori models.Pendidikan
 
 	db, err := gorm.Open(postgres.Open(Dsn), &gorm.Config{})
 
@@ -55,8 +55,8 @@ func DeleteKategori(id string) error {
 	return nil
 
 }
-func UpdateKategori(name string, description string, id string) (models.Kategori_Soal, error) {
-	var newTask = models.Kategori_Soal{Name: name, Description: description}
+func UpdatePendidikan(name string, description string, id string) (models.Pendidikan, error) {
+	var newTask = models.Pendidikan{Name: name, Description: description}
 
 	db, err := gorm.Open(postgres.Open(Dsn), &gorm.Config{})
 	if err != nil {

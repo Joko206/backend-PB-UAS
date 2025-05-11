@@ -1,6 +1,7 @@
 package database
 
 import (
+	"encoding/json"
 	"log"
 
 	"github.com/Joko206/UAS_PWEB1/models"
@@ -8,9 +9,9 @@ import (
 	"gorm.io/gorm"
 )
 
-func CreateKategori(name string, description string) (models.Kategori_Soal, error) {
+func CreateSoal(question string, option json.RawMessage, correct_answer string, kuis_id uint) (models.Soal, error) {
 	// Create a new Kategori_Soal instance
-	var newKategori = models.Kategori_Soal{Name: name, Description: description}
+	var newKategori = models.Soal{Question: question, Options: option, Correct_answer: correct_answer, Kuis_id: kuis_id}
 
 	// Open a database connection (or reuse the global DB connection)
 	db, err := gorm.Open(postgres.Open(Dsn), &gorm.Config{})
@@ -29,8 +30,8 @@ func CreateKategori(name string, description string) (models.Kategori_Soal, erro
 	// Return the newly created category
 	return newKategori, nil
 }
-func GetallTasks() ([]models.Kategori_Soal, error) {
-	var getKategori []models.Kategori_Soal
+func GetSoal() ([]models.Soal, error) {
+	var getKategori []models.Soal
 
 	db, err := gorm.Open(postgres.Open(Dsn), &gorm.Config{})
 	if err != nil {
@@ -41,9 +42,8 @@ func GetallTasks() ([]models.Kategori_Soal, error) {
 
 	return getKategori, nil
 }
-
-func DeleteKategori(id string) error {
-	var deleteKategori models.Kategori_Soal
+func DeletSoal(id string) error {
+	var deleteKategori models.Soal
 
 	db, err := gorm.Open(postgres.Open(Dsn), &gorm.Config{})
 
@@ -55,14 +55,14 @@ func DeleteKategori(id string) error {
 	return nil
 
 }
-func UpdateKategori(name string, description string, id string) (models.Kategori_Soal, error) {
-	var newTask = models.Kategori_Soal{Name: name, Description: description}
+func UpdateSoal(question string, option json.RawMessage, correct_answer string, kuis_id uint, id string) (models.Soal, error) {
+	var newTask = models.Soal{Question: question, Options: option, Correct_answer: correct_answer, Kuis_id: kuis_id}
 
 	db, err := gorm.Open(postgres.Open(Dsn), &gorm.Config{})
 	if err != nil {
 		return newTask, err
 	}
 
-	db.Where("ID = ?", id).Updates(&models.Kategori_Soal{Name: newTask.Name, Description: newTask.Description})
+	db.Where("ID = ?", id).Updates(&models.Soal{Question: newTask.Question, Options: newTask.Options, Correct_answer: newTask.Correct_answer, Kuis_id: newTask.Kuis_id})
 	return newTask, nil
 }

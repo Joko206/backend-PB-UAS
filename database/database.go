@@ -4,29 +4,29 @@ import (
 	"fmt"
 	"log"
 
-	"belajar-via-dev.to/models"
+	"github.com/Joko206/UAS_PWEB1/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 const (
-	host     = "localhost"
-	port     = 5432
+	host     = "metro.proxy.rlwy.net"
+	port     = 11951
 	user     = "postgres"
-	password = "123"
-	dbname   = "test1"
+	password = "VxYgKiPnPDgILDlzcYAxXOzEdOTUQxwh"
+	dbname   = "railway"
 )
 
-var dsn string = fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable TimeZone=Asia/Jakarta", host, port, user, password, dbname)
+var Dsn = fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable TimeZone=Asia/Jakarta", host, port, user, password, dbname)
 
 var DB *gorm.DB
 
 func DBconn() {
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(Dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error connecting to database:", err)
 	}
 	DB = db
 
-	db.AutoMigrate(&models.Users{}, &models.Kategori_Soal{}, &models.Tingkatan{}, models.Kelas{}, models.Kuis{})
+	db.AutoMigrate(&models.Users{}, &models.Kategori_Soal{}, &models.Tingkatan{}, models.Kelas{}, models.Kuis{}, models.Soal{}, models.Pendidikan{})
 }

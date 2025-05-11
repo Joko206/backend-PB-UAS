@@ -1,11 +1,18 @@
 package routes
 
 import (
-	"belajar-via-dev.to/controllers"
+	"github.com/Joko206/UAS_PWEB1/controllers"
 	"github.com/gofiber/fiber/v2"
 )
 
 func Setup(app *fiber.App) {
+
+	start := app.Group("/")
+
+	start.Get("/", func(ctx *fiber.Ctx) error {
+		return ctx.SendString("Hello World")
+	})
+
 	api := app.Group("/user")
 
 	api.Get("/get-user", controllers.User)
@@ -70,5 +77,35 @@ func Setup(app *fiber.App) {
 	Kuis.Post("/add-kuis", controllers.AddKuis)
 	Kuis.Patch("/update-kuis", controllers.UpdateKuis)
 	Kuis.Delete("/delete-kuis", controllers.DeleteKuis)
+
+	Soal := app.Group("/soal")
+
+	Soal.Get("/", func(ctx *fiber.Ctx) error {
+		_, err := controllers.Authenticate(ctx)
+		if err != nil {
+			return err
+		}
+		return ctx.SendString("haloo sekarang kamu ada didalam api Soals")
+	})
+
+	Soal.Get("/get-soal", controllers.GetSoal)
+	Soal.Post("/add-soal", controllers.AddSoal)
+	Soal.Patch("/update-soal", controllers.UpdateSoal)
+	Soal.Delete("/delete-soal", controllers.DeleteSoal)
+
+	Pendidikan := app.Group("/pendidikan")
+
+	Pendidikan.Get("/", func(ctx *fiber.Ctx) error {
+		_, err := controllers.Authenticate(ctx)
+		if err != nil {
+			return err
+		}
+		return ctx.SendString("haloo sekarang kamu ada didalam api pendidikan")
+	})
+
+	Pendidikan.Get("/get-pendidikan", controllers.GetPendidikan)
+	Pendidikan.Post("/add-pendidikan", controllers.AddPendidikan)
+	Pendidikan.Patch("/update-pendidikan", controllers.UpdatePendidikan)
+	Pendidikan.Delete("/delete-pendidikan", controllers.DeletePendidikan)
 
 }

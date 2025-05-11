@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"belajar-via-dev.to/database"
-	"belajar-via-dev.to/models"
+	"github.com/Joko206/UAS_PWEB1/database"
+	"github.com/Joko206/UAS_PWEB1/models"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -29,40 +29,40 @@ func GetKuis(c *fiber.Ctx) error {
 	})
 }
 
+// Fungsi untuk menambahkan Kuis
 func AddKuis(c *fiber.Ctx) error {
+
 	// Authenticate the user using the JWT token
 	_, err := Authenticate(c)
 	if err != nil {
 		return err
 	}
 
-	newKategori := new(models.Kuis)
-	err = c.BodyParser(newKategori)
+	newKuis := new(models.Kuis)
+	err = c.BodyParser(newKuis)
 	if err != nil {
-		c.Status(400).JSON(&fiber.Map{
+		return c.Status(400).JSON(&fiber.Map{
 			"data":    nil,
 			"success": false,
-			"message": err,
+			"message": err.Error(),
 		})
-		return err
 	}
 
-	result, err := database.CreateKuis(newKategori.Title, newKategori.Description, newKategori.Kategori_id, newKategori.Tingkatan_id, newKategori.Kelas_id)
+	// Lanjutkan dengan operasi database jika kategori valid
+	result, err := database.CreateKuis(newKuis.Title, newKuis.Description, newKuis.Kategori_id, newKuis.Tingkatan_id, newKuis.Kelas_id)
 	if err != nil {
-		c.Status(400).JSON(&fiber.Map{
+		return c.Status(400).JSON(&fiber.Map{
 			"data":    nil,
 			"success": false,
-			"message": err,
+			"message": err.Error(),
 		})
-		return err
 	}
 
-	c.Status(200).JSON(&fiber.Map{
+	return c.Status(200).JSON(&fiber.Map{
 		"data":    result,
 		"success": true,
 		"message": "Task added!",
 	})
-	return nil
 }
 
 func UpdateKuis(c *fiber.Ctx) error {

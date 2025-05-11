@@ -6,14 +6,14 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func GetTingkatan(c *fiber.Ctx) error {
+func GetPendidikan(c *fiber.Ctx) error {
 	// Authenticate the user using the JWT token
 	_, err := Authenticate(c)
 	if err != nil {
 		return err
 	}
 
-	result, err := database.GetTingkatan()
+	result, err := database.GetPendidikan()
 	if err != nil {
 		return c.Status(500).JSON(&fiber.Map{
 			"data":    nil,
@@ -29,14 +29,14 @@ func GetTingkatan(c *fiber.Ctx) error {
 	})
 }
 
-func AddTingkatan(c *fiber.Ctx) error {
+func AddPendidikan(c *fiber.Ctx) error {
 	// Authenticate the user using the JWT token
 	_, err := Authenticate(c)
 	if err != nil {
 		return err
 	}
 
-	newKategori := new(models.Kategori_Soal)
+	newKategori := new(models.Pendidikan)
 	err = c.BodyParser(newKategori)
 	if err != nil {
 		c.Status(400).JSON(&fiber.Map{
@@ -47,7 +47,7 @@ func AddTingkatan(c *fiber.Ctx) error {
 		return err
 	}
 
-	result, err := database.CreateTingkatan(newKategori.Name, newKategori.Description)
+	result, err := database.CreatePendidikan(newKategori.Name, newKategori.Description)
 	if err != nil {
 		c.Status(400).JSON(&fiber.Map{
 			"data":    nil,
@@ -65,7 +65,7 @@ func AddTingkatan(c *fiber.Ctx) error {
 	return nil
 }
 
-func UpdateTingkatan(c *fiber.Ctx) error {
+func UpdatePendidikan(c *fiber.Ctx) error {
 	// Authenticate the user using the JWT token
 	_, err := Authenticate(c)
 	if err != nil {
@@ -79,7 +79,7 @@ func UpdateTingkatan(c *fiber.Ctx) error {
 		})
 	}
 
-	newTask := new(models.Tingkatan)
+	newTask := new(models.Pendidikan)
 	err = c.BodyParser(newTask)
 	if err != nil {
 		c.Status(400).JSON(&fiber.Map{
@@ -90,7 +90,7 @@ func UpdateTingkatan(c *fiber.Ctx) error {
 		return err
 	}
 
-	result, err := database.UpdateTingkatan(newTask.Name, newTask.Description, id)
+	result, err := database.UpdatePendidikan(newTask.Name, newTask.Description, id)
 	if err != nil {
 		c.Status(400).JSON(&fiber.Map{
 			"data":    nil,
@@ -108,7 +108,7 @@ func UpdateTingkatan(c *fiber.Ctx) error {
 	return nil
 }
 
-func DeleteTingkatan(c *fiber.Ctx) error {
+func DeletePendidikan(c *fiber.Ctx) error {
 	// Authenticate the user using the JWT token
 	_, err := Authenticate(c)
 	if err != nil {
@@ -122,7 +122,7 @@ func DeleteTingkatan(c *fiber.Ctx) error {
 		})
 	}
 
-	err = database.DeleteTingkatan(id)
+	err = database.DeletePendidikan(id)
 	if err != nil {
 		return c.Status(500).JSON(&fiber.Map{
 			"data":    nil,
