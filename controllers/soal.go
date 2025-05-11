@@ -8,132 +8,91 @@ import (
 
 func GetSoal(c *fiber.Ctx) error {
 	// Authenticate the user using the JWT token
-	_, err := Authenticate(c)
-	if err != nil {
-		return err
-	}
 
 	result, err := database.GetSoal()
 	if err != nil {
-		return c.Status(500).JSON(&fiber.Map{
-			"data":    nil,
-			"success": false,
-			"message": err,
-		})
+		return handleError(c, err, "Failed to retrieve soal")
 	}
 
-	return c.Status(200).JSON(&fiber.Map{
-		"data":    result,
-		"success": true,
-		"message": "All Tasks",
-	})
+	return sendResponse(c, fiber.StatusOK, true, "All soal retrieved successfully", result)
 }
 
 func AddSoal(c *fiber.Ctx) error {
+
 	// Authenticate the user using the JWT token
-	_, err := Authenticate(c)
+
+	// Parse body request for new Soal
+	newSoal := new(models.Soal)
+	err := c.BodyParser(newSoal)
 	if err != nil {
-		return err
+		return sendResponse(c, fiber.StatusBadRequest, false, "Invalid request body", nil)
 	}
 
-	newKategori := new(models.Soal)
-	err = c.BodyParser(newKategori)
+	// Create Soal
+	result, err := database.CreateSoal(newSoal.Question, newSoal.Options, newSoal.Correct_answer, newSoal.Kuis_id)
 	if err != nil {
-		c.Status(400).JSON(&fiber.Map{
-			"data":    nil,
-			"success": false,
-			"message": err,
-		})
-		return err
+		return handleError(c, err, "Failed to add soal")
 	}
 
-	result, err := database.CreateSoal(newKategori.Question, newKategori.Options, newKategori.Correct_answer, newKategori.Kuis_id)
-	if err != nil {
-		c.Status(400).JSON(&fiber.Map{
-			"data":    nil,
-			"success": false,
-			"message": err,
-		})
-		return err
-	}
-
-	c.Status(200).JSON(&fiber.Map{
-		"data":    result,
-		"success": true,
-		"message": "Task added!",
-	})
-	return nil
+	return sendResponse(c, fiber.StatusOK, true, "Soal added successfully", result)
 }
 
 func UpdateSoal(c *fiber.Ctx) error {
 	// Authenticate the user using the JWT token
-	_, err := Authenticate(c)
-	if err != nil {
-		return err
-	}
 
 	id := c.Params("id")
 	if id == "" {
-		return c.Status(500).JSON(&fiber.Map{
-			"message": "id cannot be empty",
-		})
+		return sendResponse(c, fiber.StatusBadRequest, false, "ID cannot be empty", nil)
 	}
 
-	newTask := new(models.Soal)
-	err = c.BodyParser(newTask)
+	// Parse body request for updated Soal
+	newSoal := new(models.Soal)
+	err := c.BodyParser(newSoal)
 	if err != nil {
-		c.Status(400).JSON(&fiber.Map{
-			"data":    nil,
-			"success": false,
-			"message": err,
-		})
-		return err
+		return sendResponse(c, fiber.StatusBadRequest, false, "Invalid request body", nil)
 	}
 
-	result, err := database.UpdateSoal(newTask.Question, newTask.Options, newTask.Correct_answer, newTask.Kuis_id, id)
+	// Update Soal
+	result, err := database.UpdateSoal(newSoal.Question, newSoal.Options, newSoal.Correct_answer, newSoal.Kuis_id, id)
 	if err != nil {
-		c.Status(400).JSON(&fiber.Map{
-			"data":    nil,
-			"success": false,
-			"message": err,
-		})
-		return err
+		return handleError(c, err, "Failed to update soal")
 	}
 
-	c.Status(200).JSON(&fiber.Map{
-		"data":    result,
-		"success": true,
-		"message": "Task Updated!",
-	})
-	return nil
+	return sendResponse(c, fiber.StatusOK, true, "Soal updated successfully", result)
 }
-
 func DeleteSoal(c *fiber.Ctx) error {
 	// Authenticate the user using the JWT token
-	_, err := Authenticate(c)
-	if err != nil {
-		return err
-	}
 
 	id := c.Params("id")
 	if id == "" {
-		return c.Status(500).JSON(&fiber.Map{
-			"message": "id cannot be empty",
-		})
+		return sendResponse(c, fiber.StatusBadRequest, false, "ID cannot be empty", nil)
 	}
 
-	err = database.DeletSoal(id)
+	// Delete Soal
+	err := database.DeleteSoal(id)
 	if err != nil {
-		return c.Status(500).JSON(&fiber.Map{
-			"data":    nil,
-			"success": false,
-			"message": err,
-		})
+		return handleError(c, err, "Failed to delete soal")
 	}
 
-	return c.Status(200).JSON(&fiber.Map{
-		"data":    nil,
-		"success": true,
-		"message": "Task Deleted Successfully",
-	})
+	return sendResponse(c, fiber.StatusOK, true, "Soal deleted successfully", nil)
+}
+func GetSoalByKuisID(c *fiber.Ctx) error {
+	// Ambil kuis_id dari parameter request
+	kuisID := c.Params("kuis_id")
+
+	// Cek apakah kuis_id valid
+	var kuis models.Kuis
+	err := database.DB.First(&kuis, kuisID).Error
+	if err != nil {
+		return sendResponse(c, fiber.StatusNotFound, false, "Kuis not found", nil)
+	}
+
+	// Ambil soal-soal yang terkait dengan kuis_id
+	var soal []models.Soal
+	err = database.DB.Where("kuis_id = ?", kuisID).Find(&soal).Error
+	if err != nil {
+		return sendResponse(c, fiber.StatusInternalServerError, false, "Failed to fetch questions", nil)
+	}
+
+	return sendResponse(c, fiber.StatusOK, true, "Soal retrieved successfully", soal)
 }

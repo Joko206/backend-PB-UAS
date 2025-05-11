@@ -38,42 +38,96 @@ func Authenticate(c *fiber.Ctx) (*models.Users, error) {
 	return &user, nil
 }
 
+func RoleMiddleware(allowedRoles []string) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		user, err := Authenticate(c)
+		if err != nil {
+			return err
+		}
+
+		// Check if the user role is allowed
+		roleAllowed := false
+		for _, role := range allowedRoles {
+			if user.Role == role {
+				roleAllowed = true
+				break
+			}
+		}
+
+		if !roleAllowed {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+				"data":    nil,
+				"success": false,
+				"message": "You don't have permission to access this resource",
+			})
+		}
+
+		return c.Next()
+	}
+}
+
 func Register(c *fiber.Ctx) error {
 	var data map[string]string
 
+	// Parse request body
 	if err := c.BodyParser(&data); err != nil {
-		return err
+		return sendResponse(c, fiber.StatusBadRequest, false, "Invalid request body", nil)
 	}
 
-	password, _ := bcrypt.GenerateFromPassword([]byte(data["password"]), 14)
+	// Default role is "student" if not provided
+	role := data["role"]
+	if role == "" {
+		role = "student" // Default role
+	}
 
+	// Validate that the role is one of the allowed values
+	if role != "admin" && role != "teacher" && role != "student" {
+		return sendResponse(c, fiber.StatusBadRequest, false, "Invalid role. Allowed roles: admin, teacher, student", nil)
+	}
+
+	// Hash password before saving
+	password, err := bcrypt.GenerateFromPassword([]byte(data["password"]), 14)
+	if err != nil {
+		return sendResponse(c, fiber.StatusInternalServerError, false, "Error hashing password", nil)
+	}
+
+	// Create user with the role
 	user := models.Users{
 		Name:     data["name"],
 		Email:    data["email"],
 		Password: password,
+		Role:     role, // Set the role here
 	}
 
-	database.DB.Create(&user)
+	// Save user to the database
+	if err := database.DB.Create(&user).Error; err != nil {
+		return handleError(c, err, "Failed to register user")
+	}
 
-	return c.JSON(user)
+	// Return success response
+	return sendResponse(c, fiber.StatusOK, true, "User registered successfully", user)
 }
 
 func Login(c *fiber.Ctx) error {
 	var data map[string]string
 
+	// Parse request body
 	if err := c.BodyParser(&data); err != nil {
-		return err
+		return sendResponse(c, fiber.StatusBadRequest, false, "Invalid request body", nil)
 	}
 
 	var user models.Users
-	database.DB.Where("email = ?", data["email"]).First(&user)
-	if user.ID == 0 {
-		return c.Status(404).JSON(fiber.Map{"message": "User not found"})
-	}
-	if err := bcrypt.CompareHashAndPassword(user.Password, []byte(data["password"])); err != nil {
-		return c.Status(401).JSON(fiber.Map{"message": "Invalid password"})
+	// Find user by email
+	if err := database.DB.Where("email = ?", data["email"]).First(&user).Error; err != nil {
+		return sendResponse(c, fiber.StatusNotFound, false, "User not found", nil)
 	}
 
+	// Compare password
+	if err := bcrypt.CompareHashAndPassword(user.Password, []byte(data["password"])); err != nil {
+		return sendResponse(c, fiber.StatusUnauthorized, false, "Invalid password", nil)
+	}
+
+	// Generate JWT token
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
 		Issuer:    strconv.Itoa(int(user.ID)),
 		ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
@@ -81,24 +135,20 @@ func Login(c *fiber.Ctx) error {
 
 	token, err := claims.SignedString([]byte(SecretKey))
 	if err != nil {
-		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "could not login",
-		})
+		return handleError(c, err, "Failed to generate token")
 	}
 
+	// Set JWT cookie
 	cookie := fiber.Cookie{
 		Name:     "jwt",
 		Value:    token,
 		Expires:  time.Now().Add(time.Hour * 24),
 		HTTPOnly: true,
 	}
-
 	c.Cookie(&cookie)
 
-	return c.JSON(fiber.Map{
-		"message": "success",
-		"token":   token,
+	return sendResponse(c, fiber.StatusOK, true, "Login successful", fiber.Map{
+		"token": token,
 	})
 }
 
@@ -109,7 +159,8 @@ func User(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.JSON(user)
+	// Return user details
+	return sendResponse(c, fiber.StatusOK, true, "User retrieved successfully", user)
 }
 
 func Logout(c *fiber.Ctx) error {
@@ -119,10 +170,8 @@ func Logout(c *fiber.Ctx) error {
 		Expires:  time.Now().Add(-time.Hour * 24),
 		HTTPOnly: true,
 	}
-
 	c.Cookie(&cookie)
 
-	return c.JSON(fiber.Map{
-		"message": "success",
-	})
+	// Return success message
+	return sendResponse(c, fiber.StatusOK, true, "Logout successful", nil)
 }

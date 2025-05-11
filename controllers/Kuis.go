@@ -1,139 +1,138 @@
 package controllers
 
 import (
+	"log"
+
 	"github.com/Joko206/UAS_PWEB1/database"
 	"github.com/Joko206/UAS_PWEB1/models"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 func GetKuis(c *fiber.Ctx) error {
-	// Authenticate the user using the JWT token
-	_, err := Authenticate(c)
-	if err != nil {
-		return err
-	}
 
 	result, err := database.GetKuis()
 	if err != nil {
-		return c.Status(500).JSON(&fiber.Map{
-			"data":    nil,
-			"success": false,
-			"message": err,
-		})
+		return handleError(c, err, "Failed to retrieve quizzes")
 	}
 
-	return c.Status(200).JSON(&fiber.Map{
-		"data":    result,
-		"success": true,
-		"message": "All Tasks",
-	})
+	return sendResponse(c, fiber.StatusOK, true, "All quizzes retrieved successfully", result)
 }
 
-// Fungsi untuk menambahkan Kuis
 func AddKuis(c *fiber.Ctx) error {
+	var db *gorm.DB
+	db, err := gorm.Open(postgres.Open(database.Dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatal("Error connecting to the database: ", err)
+	}
 
-	// Authenticate the user using the JWT token
-	_, err := Authenticate(c)
+	_, err = Authenticate(c)
 	if err != nil {
 		return err
 	}
 
+	// Parse request body
 	newKuis := new(models.Kuis)
 	err = c.BodyParser(newKuis)
 	if err != nil {
-		return c.Status(400).JSON(&fiber.Map{
-			"data":    nil,
-			"success": false,
-			"message": err.Error(),
-		})
+		return sendResponse(c, fiber.StatusBadRequest, false, "Invalid request body", nil)
 	}
 
-	// Lanjutkan dengan operasi database jika kategori valid
+	// Validate Kategori
+	var kategori models.Kategori_Soal
+	if err := db.First(&kategori, newKuis.Kategori_id).Error; err != nil {
+		return sendResponse(c, fiber.StatusBadRequest, false, "Invalid Kategori ID", nil)
+	}
+
+	// Validate Tingkatan
+	var tingkatan models.Tingkatan
+	if err := db.First(&tingkatan, newKuis.Tingkatan_id).Error; err != nil {
+		return sendResponse(c, fiber.StatusBadRequest, false, "Invalid Tingkatan ID", nil)
+	}
+
+	// Validate Kelas
+	var kelas models.Kelas
+	if err := db.First(&kelas, newKuis.Kelas_id).Error; err != nil {
+		return sendResponse(c, fiber.StatusBadRequest, false, "Invalid Kelas ID", nil)
+	}
+
+	// Create Kuis
 	result, err := database.CreateKuis(newKuis.Title, newKuis.Description, newKuis.Kategori_id, newKuis.Tingkatan_id, newKuis.Kelas_id)
 	if err != nil {
-		return c.Status(400).JSON(&fiber.Map{
-			"data":    nil,
-			"success": false,
-			"message": err.Error(),
-		})
+		return handleError(c, err, "Failed to create quiz")
 	}
 
-	return c.Status(200).JSON(&fiber.Map{
-		"data":    result,
-		"success": true,
-		"message": "Task added!",
-	})
+	return sendResponse(c, fiber.StatusOK, true, "Quiz created successfully", result)
 }
 
 func UpdateKuis(c *fiber.Ctx) error {
-	// Authenticate the user using the JWT token
-	_, err := Authenticate(c)
-	if err != nil {
-		return err
-	}
 
 	id := c.Params("id")
 	if id == "" {
-		return c.Status(500).JSON(&fiber.Map{
-			"message": "id cannot be empty",
-		})
+		return sendResponse(c, fiber.StatusBadRequest, false, "ID cannot be empty", nil)
 	}
 
+	// Parse request body
 	newTask := new(models.Kuis)
-	err = c.BodyParser(newTask)
+	err := c.BodyParser(newTask)
 	if err != nil {
-		c.Status(400).JSON(&fiber.Map{
-			"data":    nil,
-			"success": false,
-			"message": err,
-		})
-		return err
+		return sendResponse(c, fiber.StatusBadRequest, false, "Invalid request body", nil)
 	}
 
 	result, err := database.UpdateKuis(newTask.Title, newTask.Description, newTask.Kategori_id, newTask.Tingkatan_id, newTask.Kelas_id, id)
 	if err != nil {
-		c.Status(400).JSON(&fiber.Map{
-			"data":    nil,
-			"success": false,
-			"message": err,
-		})
-		return err
+		return handleError(c, err, "Failed to update quiz")
 	}
 
-	c.Status(200).JSON(&fiber.Map{
-		"data":    result,
-		"success": true,
-		"message": "Task Updated!",
-	})
-	return nil
+	return sendResponse(c, fiber.StatusOK, true, "Quiz updated successfully", result)
 }
 
 func DeleteKuis(c *fiber.Ctx) error {
-	// Authenticate the user using the JWT token
-	_, err := Authenticate(c)
-	if err != nil {
-		return err
-	}
 
 	id := c.Params("id")
 	if id == "" {
-		return c.Status(500).JSON(&fiber.Map{
-			"message": "id cannot be empty",
-		})
+		return sendResponse(c, fiber.StatusBadRequest, false, "ID cannot be empty", nil)
 	}
 
-	err = database.DeleteKuis(id)
+	err := database.DeleteKuis(id)
 	if err != nil {
-		return c.Status(500).JSON(&fiber.Map{
-			"data":    nil,
-			"success": false,
-			"message": err,
-		})
+		return handleError(c, err, "Failed to delete quiz")
 	}
 
-	return c.Status(200).JSON(&fiber.Map{
-		"data":    nil,
-		"success": true,
-		"message": "Task Deleted Successfully",
-	})
+	return sendResponse(c, fiber.StatusOK, true, "Quiz deleted successfully", nil)
+}
+func FilterKuis(c *fiber.Ctx) error {
+	// Ambil parameter dari query string
+	kategoriID := c.Query("kategori_id")     // Misalnya ?kategori_id=1
+	tingkatanID := c.Query("tingkatan_id")   // Misalnya ?tingkatan_id=1
+	pendidikanID := c.Query("pendidikan_id") // Misalnya ?pendidikan_id=1
+
+	// Membuat query untuk filter
+	var kuis []models.Kuis
+	query := database.DB.Model(&models.Kuis{})
+
+	// Jika kategori_id disediakan, filter berdasarkan kategori_id
+	if kategoriID != "" {
+		query = query.Where("kategori_id = ?", kategoriID)
+	}
+
+	// Jika tingkatan_id disediakan, filter berdasarkan tingkatan_id
+	if tingkatanID != "" {
+		query = query.Where("tingkatan_id = ?", tingkatanID)
+	}
+
+	// Jika pendidikan_id disediakan, filter berdasarkan pendidikan_id
+	if pendidikanID != "" {
+		query = query.Where("pendidikan_id = ?", pendidikanID)
+	}
+
+	// Menjalankan query untuk mendapatkan kuis yang sesuai dengan filter
+	err := query.Find(&kuis).Error
+	if err != nil {
+		return sendResponse(c, fiber.StatusInternalServerError, false, "Failed to fetch quizzes", nil)
+	}
+
+	// Mengembalikan daftar kuis yang telah difilter
+	return sendResponse(c, fiber.StatusOK, true, "Filtered quizzes retrieved successfully", kuis)
 }
