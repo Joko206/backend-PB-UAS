@@ -30,7 +30,7 @@ func Setup(app *fiber.App) {
 	api.Get("/get-user", controllers.User)
 	api.Post("/register", controllers.Register)
 	api.Get("/login", controllers.Login)
-	api.Get("/logout", controllers.Logout)
+	api.Post("/logout", controllers.Logout)
 
 	// Kategori Routes (Only Admin)
 	kategori := app.Group("/kategori", AuthMiddleware, controllers.RoleMiddleware([]string{"admin"}))
