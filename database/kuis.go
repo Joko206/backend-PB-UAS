@@ -6,13 +6,14 @@ import (
 )
 
 // CreateKuis creates a new Kuis in the database
-func CreateKuis(title string, description string, kategori uint, tingkatan uint, kelas uint) (models.Kuis, error) {
+func CreateKuis(title string, description string, kategori uint, tingkatan uint, kelas uint, pendidikan uint) (models.Kuis, error) {
 	var newKuis = models.Kuis{
-		Title:        title,
-		Description:  description,
-		Kategori_id:  kategori,
-		Tingkatan_id: tingkatan,
-		Kelas_id:     kelas,
+		Title:         title,
+		Description:   description,
+		Kategori_id:   kategori,
+		Tingkatan_id:  tingkatan,
+		Kelas_id:      kelas,
+		Pendidikan_id: pendidikan,
 	}
 
 	// Get DB connection
@@ -40,6 +41,11 @@ func CreateKuis(title string, description string, kategori uint, tingkatan uint,
 	// Insert the new Kuis into the database
 	if err := db.Create(&newKuis).Error; err != nil {
 		return newKuis, fmt.Errorf("failed to insert data into kuis: %w", err)
+	}
+
+	var PendidikanObj models.Kategori_Soal
+	if err := db.First(&PendidikanObj, pendidikan).Error; err != nil {
+		return newKuis, fmt.Errorf("Invalid Pendidikan ID")
 	}
 
 	return newKuis, nil
@@ -82,13 +88,14 @@ func DeleteKuis(id string) error {
 }
 
 // UpdateKuis updates an existing Kuis in the database
-func UpdateKuis(title string, description string, kategori uint, tingkatan uint, kelas uint, id string) (models.Kuis, error) {
+func UpdateKuis(title string, description string, kategori uint, tingkatan uint, kelas uint, pendidikan uint, id string) (models.Kuis, error) {
 	var updatedKuis = models.Kuis{
-		Title:        title,
-		Description:  description,
-		Kategori_id:  kategori,
-		Tingkatan_id: tingkatan,
-		Kelas_id:     kelas,
+		Title:         title,
+		Description:   description,
+		Kategori_id:   kategori,
+		Tingkatan_id:  tingkatan,
+		Kelas_id:      kelas,
+		Pendidikan_id: pendidikan,
 	}
 
 	// Get DB connection
