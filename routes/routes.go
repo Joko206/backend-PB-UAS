@@ -43,15 +43,15 @@ func Setup(app *fiber.App) {
 	tingkatan := app.Group("/tingkatan", AuthMiddleware)
 	tingkatan.Get("/get-tingkatan", controllers.GetTingkatan)
 	tingkatan.Post("/add-tingkatan", controllers.RoleMiddleware([]string{"admin"}), controllers.AddTingkatan)
-	tingkatan.Patch("/update-tingkatan", controllers.RoleMiddleware([]string{"admin"}), controllers.UpdateTingkatan)
-	tingkatan.Delete("/delete-tingkatan", controllers.RoleMiddleware([]string{"admin"}), controllers.DeleteTingkatan)
+	tingkatan.Patch("/update-tingkatan/:id", controllers.RoleMiddleware([]string{"admin"}), controllers.UpdateTingkatan)
+	tingkatan.Delete("/delete-tingkatan/:id", controllers.RoleMiddleware([]string{"admin"}), controllers.DeleteTingkatan)
 
 	// Kelas Routes (Admin, Teacher, Student)
 	kelas := app.Group("/kelas", AuthMiddleware)
 	kelas.Get("/get-kelas", controllers.GetKelas)
 	kelas.Post("/add-kelas", controllers.RoleMiddleware([]string{"admin", "teacher"}), controllers.AddKelas)
-	kelas.Patch("/update-kelas", controllers.RoleMiddleware([]string{"admin", "teacher"}), controllers.UpdateKelas)
-	kelas.Delete("/delete-kelas", controllers.RoleMiddleware([]string{"admin", "teacher"}), controllers.DeleteKelas)
+	kelas.Patch("/update-kelas/:id", controllers.RoleMiddleware([]string{"admin", "teacher"}), controllers.UpdateKelas)
+	kelas.Delete("/delete-kelas/:id", controllers.RoleMiddleware([]string{"admin", "teacher"}), controllers.DeleteKelas)
 	kelas.Post("/join-kelas", controllers.JoinKelas)
 	kelas.Get("/get-kelas-by-user", controllers.GetKelasByUserID)
 
@@ -59,8 +59,8 @@ func Setup(app *fiber.App) {
 	kuis := app.Group("/kuis", AuthMiddleware)
 	kuis.Get("/get-kuis", controllers.GetKuis)
 	kuis.Post("/add-kuis", controllers.RoleMiddleware([]string{"admin", "teacher"}), controllers.AddKuis)
-	kuis.Patch("/update-kuis", controllers.RoleMiddleware([]string{"admin", "teacher"}), controllers.UpdateKuis)
-	kuis.Delete("/delete-kuis", controllers.RoleMiddleware([]string{"admin", "teacher"}), controllers.DeleteKuis)
+	kuis.Patch("/update-kuis/:id", controllers.RoleMiddleware([]string{"admin", "teacher"}), controllers.UpdateKuis)
+	kuis.Delete("/delete-kuis/:id", controllers.RoleMiddleware([]string{"admin", "teacher"}), controllers.DeleteKuis)
 	kuis.Get("/filter-kuis", controllers.FilterKuis)
 
 	// Soal Routes (Admin, Teacher)
@@ -68,18 +68,18 @@ func Setup(app *fiber.App) {
 	soal.Get("/get-soal", controllers.GetSoal)
 	soal.Get("/get-soal/:kuis_id", controllers.GetSoalByKuisID)
 	soal.Post("/add-soal", controllers.RoleMiddleware([]string{"admin", "teacher"}), controllers.AddSoal)
-	soal.Patch("/update-soal", controllers.RoleMiddleware([]string{"admin", "teacher"}), controllers.UpdateSoal)
-	soal.Delete("/delete-soal", controllers.RoleMiddleware([]string{"admin", "teacher"}), controllers.DeleteSoal)
+	soal.Patch("/update-soal/:id", controllers.RoleMiddleware([]string{"admin", "teacher"}), controllers.UpdateSoal)
+	soal.Delete("/delete-soal/:id", controllers.RoleMiddleware([]string{"admin", "teacher"}), controllers.DeleteSoal)
 
 	// Pendidikan Routes (Only Admin)
 	pendidikan := app.Group("/pendidikan", AuthMiddleware)
 	pendidikan.Get("/get-pendidikan", controllers.GetPendidikan)
 	pendidikan.Post("/add-pendidikan", controllers.RoleMiddleware([]string{"admin"}), controllers.AddPendidikan)
-	pendidikan.Patch("/update-pendidikan", controllers.RoleMiddleware([]string{"admin"}), controllers.UpdatePendidikan)
-	pendidikan.Delete("/delete-pendidikan", controllers.RoleMiddleware([]string{"admin"}), controllers.DeletePendidikan)
+	pendidikan.Patch("/update-pendidikan/:id", controllers.RoleMiddleware([]string{"admin"}), controllers.UpdatePendidikan)
+	pendidikan.Delete("/delete-pendidikan/:id", controllers.RoleMiddleware([]string{"admin"}), controllers.DeletePendidikan)
 
 	// Hasil Kuis Routes (Admin, Teacher, Student)
 	result := app.Group("/hasil-kuis", AuthMiddleware)
-	result.Get("/:user_id/:kuis_id", controllers.GetHasilKuis) // Accessible by Admin, Teacher, and Student
-	result.Post("/submit-jawaban", controllers.SubmitJawaban)  // Accessible by Student
+	result.Get("/:user_id/:kuis_id", controllers.GetHasilKuis)
+	result.Post("/submit-jawaban", controllers.SubmitJawaban)
 }
