@@ -1,13 +1,14 @@
 package controllers
 
 import (
+	"strconv"
+	"time"
+
 	"github.com/Joko206/UAS_PWEB1/database"
 	"github.com/Joko206/UAS_PWEB1/models"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
-	"strconv"
-	"time"
 )
 
 // Secret key for JWT
@@ -15,12 +16,25 @@ const SecretKey = "secret"
 
 // Helper function to authenticate using JWT
 func Authenticate(c *fiber.Ctx) (*models.Users, error) {
+	var tokenString string
+
+	// First try to get token from cookie
 	cookie := c.Cookies("jwt")
-	if cookie == "" {
+	if cookie != "" {
+		tokenString = cookie
+	} else {
+		// If no cookie, try Authorization header
+		authHeader := c.Get("Authorization")
+		if authHeader != "" && len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+			tokenString = authHeader[7:]
+		}
+	}
+
+	if tokenString == "" {
 		return nil, fiber.NewError(fiber.StatusUnauthorized, "No JWT token found")
 	}
 
-	token, err := jwt.ParseWithClaims(cookie, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(SecretKey), nil
 	})
 
@@ -148,7 +162,10 @@ func Login(c *fiber.Ctx) error {
 	c.Cookie(&cookie)
 
 	return sendResponse(c, fiber.StatusOK, true, "Login successful", fiber.Map{
-		"token": token,
+		"token":   token,
+		"role":    user.Role,
+		"user_id": user.ID,
+		"name":    user.Name,
 	})
 }
 
