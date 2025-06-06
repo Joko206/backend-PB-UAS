@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+
 	"gorm.io/gorm"
 )
 
@@ -67,7 +68,7 @@ type Hasil_Kuis struct {
 	Kuis_id        uint  `json:"kuis_id"`
 	Kuis           Kuis  `gorm:"foreignKey:Kuis_id;constraint:OnDelete:CASCADE;"`
 	Score          uint  `json:"score"`
-	Correct_Answer uint  `json:"correct_answer;constraint:OnDelete:CASCADE;"`
+	Correct_Answer uint  `json:"correct_answer"`
 }
 type SoalAnswer struct {
 	gorm.Model
