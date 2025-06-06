@@ -1,12 +1,13 @@
 package controllers
 
 import (
+	"log"
+
 	"github.com/Joko206/UAS_PWEB1/database"
 	"github.com/Joko206/UAS_PWEB1/models"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"log"
 )
 
 func SubmitJawaban(c *fiber.Ctx) error {
@@ -54,8 +55,13 @@ func SubmitJawaban(c *fiber.Ctx) error {
 		}
 	}
 
-	// Hitung skor
-	score := correctAnswers * 10 // Misalnya 10 poin untuk setiap jawaban yang benar
+	// Hitung skor sebagai persentase (0-100)
+	var score uint
+	if len(soalList) > 0 {
+		score = uint((float64(correctAnswers) / float64(len(soalList))) * 100)
+	} else {
+		score = 0
+	}
 
 	// Simpan hasil kuis ke tabel Hasil_Kuis
 	result := models.Hasil_Kuis{
